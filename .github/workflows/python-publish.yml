@@ -3,7 +3,9 @@
 
 name: Upload Python Package
 
-on: push
+on: 
+  schedule:
+    - cron: '55 7 * * *'
 
 jobs:
   deploy:
