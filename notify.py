@@ -28,6 +28,8 @@ def getDingMes(dingtalk_url, name_today, mobile_today, name_tomorrow,
         }
     }
 
+    print(stringBody)
+
     MessageBody = json.dumps(stringBody)
     result = requests.post(url=baseUrl, data=MessageBody, headers=HEADERS)
     print(result.text)
