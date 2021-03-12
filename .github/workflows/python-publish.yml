@@ -3,7 +3,9 @@
 
 name: Upload Python Package
 
-on: push
+on: 
+  schedule:
+  - cron: '1 8 * * *'
 
 jobs:
   deploy:
@@ -28,6 +30,5 @@ jobs:
         dingtalk_key: ${{ secrets.dingtalk_key }}
         holiday_key: ${{ secrets.holiday_key }}
         des_key: ${{ secrets.des_key }}
-        test: "hello"
       run: |
-        echo  $test
+        python notify.py "$dingtalk_key" "$holiday_key" "$des_key"
