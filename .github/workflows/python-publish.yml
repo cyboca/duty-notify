@@ -21,7 +21,7 @@ jobs:
         python-version: '3.8.3'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
         pip install pandas pyDes==2.0.1 requests
     - name: trigger dingtalk webhook
       env:
