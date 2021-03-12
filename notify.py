@@ -95,8 +95,11 @@ def des_encrypt(des_key, des_iv, str):
 
 
 def des_decrypt(des_key, des_iv, data):
+    print("------",data)
     k = des(des_key, ECB, des_iv, pad=None, padmode=PAD_PKCS5)
+    print("---------",k.decrypt(base64.b64decode(data)))
     return k.decrypt(base64.b64decode(data))
+    
 
 
 if __name__ == '__main__':
@@ -122,12 +125,9 @@ if __name__ == '__main__':
             duty_csv, 1)
 
         # 解码手机号用于@指定人员
-        print(mobile_today,mobile_tomorrow)
-        
+
         mobile_today = des_decrypt(des_key, des_iv, mobile_today).decode('unicode_escape')
         mobile_tomorrow = des_decrypt(des_key, des_iv, mobile_tomorrow).decode('unicode_escape')
-
-        print(mobile_today,mobile_tomorrow)
 
         # 钉钉提醒
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
