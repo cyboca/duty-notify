@@ -31,6 +31,6 @@ jobs:
       run: |
         python notify.py "$dingtalk_key" "$holiday_key" "$des_key"
     - name: Commit & Push changes
-      uses: actions-js/push@main
+      uses: actions-js/push@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}        
