@@ -3,9 +3,7 @@
 
 name: Upload Python Package
 
-on:
-  release:
-    types: [created]
+on: push
 
 jobs:
   deploy:
@@ -14,6 +12,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        persist-credentials: false 
+        fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -22,3 +23,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pandas pyDes requests
+    - name: trigger dingtalk webhook
+      env:
+        dingtalk_key: ${{ secrets.dingtalk_key }}
+        holiday_key: ${{ secrets.holiday_key }}
+        des_key: ${{ secrets.des_key }}
+        test: "hello"
+      run: |
+        echo  $test
