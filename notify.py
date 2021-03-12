@@ -122,8 +122,12 @@ if __name__ == '__main__':
             duty_csv, 1)
 
         # 解码手机号用于@指定人员
+        print(mobile_today,mobile_tomorrow)
+        
         mobile_today = des_decrypt(des_key, des_iv, mobile_today).decode('unicode_escape')
         mobile_tomorrow = des_decrypt(des_key, des_iv, mobile_tomorrow).decode('unicode_escape')
+
+        print(mobile_today,mobile_tomorrow)
 
         # 钉钉提醒
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
