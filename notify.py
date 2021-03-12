@@ -1,5 +1,4 @@
 import requests
-import sqlite3
 import json
 import pandas as pd
 import datetime
