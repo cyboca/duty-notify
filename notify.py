@@ -127,5 +127,5 @@ if __name__ == '__main__':
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
             name_tomorrow,mobile_tomorrow)
 
-        # 更新值班人员
+        # 更新值班人员csv
         rotate_person_on_duty(duty_csv)
