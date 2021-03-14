@@ -27,9 +27,8 @@ jobs:
       env:
         dingtalk_key: ${{ secrets.dingtalk_key }}
         holiday_key: ${{ secrets.holiday_key }}
-        des_key: ${{ secrets.des_key }}
       run: |
-        python notify.py "$dingtalk_key" "$holiday_key" "$des_key"
+        python notify.py "$dingtalk_key" "$holiday_key"
     - name: Commit & Push changes
       uses: actions-js/push@master
       with:

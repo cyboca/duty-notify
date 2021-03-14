@@ -113,8 +113,6 @@ if __name__ == '__main__':
     holiday_url = "http://api.tianapi.com/txapi/jiejiari/index"
     holiday_key = sys.argv[2]
 
-    des_key = sys.argv[3].encode()
-    des_iv = "\0\2\0\0\4\0\7\0"
 
     # csv文件路径
     duty_csv = "duty.csv"
@@ -127,10 +125,8 @@ if __name__ == '__main__':
 
         # 解码手机号用于@指定人员
 
-        mobile_today = des_decrypt(des_key, des_iv,
-                                   mobile_today).decode('unicode_escape')
-        mobile_tomorrow = des_decrypt(des_key, des_iv,
-                                      mobile_tomorrow).decode('unicode_escape')
+        mobile_today = base64.b64decode(mobile_today) 
+        mobile_tomorrow = base64.b64decode(mobile_tomorrow)
 
         # 钉钉提醒
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
