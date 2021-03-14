@@ -72,6 +72,8 @@ def is_trade_day(holiday_url, key):
 
     data = json.loads(result.text)
 
+    print(data)
+
     if (data["newslist"][0]["isnotwork"] == 0):
         return 1
     else:
