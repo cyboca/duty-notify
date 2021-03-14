@@ -1,4 +1,5 @@
 import requests
+import time
 import json
 import pandas as pd
 import datetime
@@ -131,6 +132,9 @@ if __name__ == '__main__':
         # 钉钉提醒
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
                    name_tomorrow, mobile_tomorrow)
-
-        # 更新值班人员csv
-        rotate_person_on_duty(duty_csv)
+        
+        if(time.localtime().tm_hour > 15):
+            # 更新值班人员csv
+            rotate_person_on_duty(duty_csv)
+    else:
+        print("today is not a trade day")
