@@ -19,6 +19,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
+        env:
+          TZ: Asia/Shanghai # 时区
         run: |
-          timedatectl set-timezone Asia/Shanghai
           date
