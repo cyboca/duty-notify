@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install pandas pyDes==2.0.1 requests
+        pip install -r requirements.txt
     - name: trigger dingtalk webhook
       env:
         dingtalk_key: ${{ secrets.dingtalk_key }}
