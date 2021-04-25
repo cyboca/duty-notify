@@ -75,7 +75,9 @@ def is_trade_day(holiday_url, key):
 
     print(data)
 
-    if (data["newslist"][0]["isnotwork"] == 0):
+    if (data["newslist"][0]["isnotwork"] == 0 and 
+          data["newslist"][0]["weekday"]!=6 and 
+          data["newslist"][0]["weekday"]!=0 ):
         return 1
     else:
         return 0
