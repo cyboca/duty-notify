@@ -75,9 +75,9 @@ def is_trade_day(holiday_url, key):
 
     print(data)
 
-    if (data["newslist"][0]["isnotwork"] == 0 and 
-          data["newslist"][0]["weekday"]!=6 and 
-          data["newslist"][0]["weekday"]!=0 ):
+    if (data["newslist"][0]["isnotwork"] == 0
+            and data["newslist"][0]["weekday"] != 6
+            and data["newslist"][0]["weekday"] != 0):
         return 1
     else:
         return 0
@@ -94,21 +94,41 @@ def rotate_person_on_duty(duty_csv):
     data.to_csv("duty.csv", index=False)
 
 
+def get_cst_time(time_url, key):
+    url = time_url + "?key=" + key + "&city=上海"
+    result = requests.get(url)
+
+    data = json.loads(result.text)
+
+    date_time = time.strptime(data["newslist"][0]["strtime"],
+                              "%Y-%m-%d %H:%M:%S")
+    if date_time.tm_hour > 15:
+        return True
+    else:
+        return False
+
+
 if __name__ == '__main__':
 
     # 钉钉webhook地址
     dingtalk_url = "https://oapi.dingtalk.com/robot/send?access_token="
 
+    # 钉钉webhook接口key
     dingtalk_key = sys.argv[1]
 
+    # 节假日API
     holiday_url = "http://api.tianapi.com/txapi/jiejiari/index"
-    holiday_key = sys.argv[2]
 
+    # 世界时间API
+    time_url = "http://api.tianapi.com/txapi/worldtime/index"
+
+    # API接口key
+    tianapi_key = sys.argv[2]
 
     # csv文件路径
     duty_csv = "duty.csv"
 
-    if (is_trade_day(holiday_url, holiday_key)):
+    if (is_trade_day(holiday_url, tianapi_key)):
         # 获取今日和次交易日值班人员信息
         name_today, id_today, mobile_today = get_person_on_duty(duty_csv, 0)
         name_tomorrow, id_tomorrow, mobile_tomorrow = get_person_on_duty(
@@ -122,8 +142,8 @@ if __name__ == '__main__':
         # 钉钉提醒
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
                    name_tomorrow, mobile_tomorrow)
-        
-        if(time.localtime().tm_hour > 15):
+
+        if (get_cst_time(time_url, tianapi_key)):
             # 更新值班人员csv
             rotate_person_on_duty(duty_csv)
     else:
