@@ -94,20 +94,6 @@ def rotate_person_on_duty(duty_csv):
     data.to_csv("duty.csv", index=False)
 
 
-def des_encrypt(des_key, des_iv, str):
-    k = des(des_key, ECB, des_iv, pad=None, padmode=PAD_PKCS5)
-    return base64.b64encode(k.encrypt(str))
-
-
-def des_decrypt(des_key, des_iv, data):
-    print("------", data)
-    k = des(des_key, ECB, des_iv, pad=None, padmode=PAD_PKCS5)
-    d = base64.b64decode(data)
-    print("---------",d)
-    print("---------", k.decrypt(d))
-    return k.decrypt(base64.b64decode(data))
-
-
 if __name__ == '__main__':
 
     # 钉钉webhook地址
