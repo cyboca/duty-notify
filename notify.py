@@ -102,7 +102,7 @@ def get_cst_time(time_url, key):
 
     date_time = time.strptime(data["newslist"][0]["strtime"],
                               "%Y-%m-%d %H:%M:%S")
-    if date_time.tm_hour > 15:
+    if date_time.tm_hour > 14:
         return True
     else:
         return False
