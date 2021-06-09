@@ -145,6 +145,7 @@ if __name__ == '__main__':
 
         if (get_cst_time(time_url, tianapi_key)):
             # 更新值班人员csv
+            print("rotate person on_duty")
             rotate_person_on_duty(duty_csv)
     else:
         print("today is not a trade day")
