@@ -96,8 +96,8 @@ def rotate_person_on_duty(duty_csv):
 def rotate_person_on_duty_random(duty_csv):
     data = pd.read_csv(duty_csv)
 
-    data.loc[data.on_duty == 1, "on_duty"] = 4
     data.loc[data.on_duty == 4, "on_duty"] = 3
+    data.loc[data.on_duty == 1, "on_duty"] = 4
     data.loc[data.on_duty == 2, "on_duty"] = 1
 
     if len(data.loc[data.on_duty > 0]) == len(data):
