@@ -6,8 +6,10 @@ import datetime
 from pyDes import *
 import sys
 import base64
+from random import *
 
 
+# 调用dingtalk hook发出通知
 def getDingMes(dingtalk_url, name_today, mobile_today, name_tomorrow,
                mobile_tomorrow):
 
@@ -36,36 +38,25 @@ def getDingMes(dingtalk_url, name_today, mobile_today, name_tomorrow,
     print(result.text)
 
 
-# 若day为0，则返回当天值班，否则返回下一天值班
-def get_person_on_duty(duty_csv, day):
+# 若day为0，则返回当天值班人员id，若day为1，则返回下一日值班人员id
+def get_person_id_on_duty(duty_csv, day):
 
     data = pd.read_csv(duty_csv)
     count = len(data)
 
-    # 查找当前值班人员，on_duty=1
-    person_on_duty = data.loc[data.on_duty == 1]
+    if not day:
+        # 查找当前值班人员，on_duty=1
+        person_on_duty = data.loc[data.on_duty == 1]
 
-    # 获取人员信息
-    name = person_on_duty["name"].values[0]
-    id = person_on_duty["id"].values[0]
-    mobile = person_on_duty["mobile"].values[0]
-
-    if (day):
-        if (id + 1 > count):
-            next_id = 1
-        else:
-            next_id = id + 1
-
-        next_person_on_duty = data.loc[data.id == next_id]
-
-        name = next_person_on_duty["name"].values[0]
-        id = next_person_on_duty["id"].values[0]
-        mobile = next_person_on_duty["mobile"].values[0]
-        return name, id, mobile
+        return person_on_duty['id'].values[0]
     else:
-        return name, id, mobile
+        # 查找下一日值班人员，on_duty=2
+        person_on_duty = data.loc[data.on_duty == 2]
+
+        return person_on_duty['id'].values[0]
 
 
+# 判断是否为交易日
 def is_trade_day(holiday_url, key):
     today = datetime.date.today().strftime('%Y-%m-%d')
     url = holiday_url + "?key=" + key + "&date=" + today
@@ -83,6 +74,8 @@ def is_trade_day(holiday_url, key):
         return 0
 
 
+# 轮转csv文件内容
+# 旧版
 def rotate_person_on_duty(duty_csv):
     data = pd.read_csv(duty_csv)
     current_id = get_person_on_duty(duty_csv, 0)[1]
@@ -94,6 +87,31 @@ def rotate_person_on_duty(duty_csv):
     data.to_csv("duty.csv", index=False)
 
 
+# 轮转csv文件内容
+# on_duty=0，本周未值班
+# on_duty=1，当日值班
+# on_duty=2，下日值班
+# on_duty=3，本周已值过班
+# on_duty=4，本周刚值过班
+def rotate_person_on_duty_random(duty_csv):
+    data = pd.read_csv(duty_csv)
+
+    data.loc[data.on_duty == 1, "on_duty"] = 4
+    data.loc[data.on_duty == 4, "on_duty"] = 3
+    data.loc[data.on_duty == 2, "on_duty"] = 1
+
+    if len(data.loc[data.on_duty > 0]) == len(data):
+        data.loc[data.on_duty == 3, "on_duty"] = 0
+        data.to_csv("duty.csv", index=False)
+
+    id_tomorrow = get_person_id_on_duty_random(duty_csv)
+
+    data.loc[data.id == id_tomorrow, "on_duty"] = 2
+
+    data.to_csv("duty.csv", index=False)
+
+
+# 获取cst时区小时，用于轮转csv文件内容
 def get_cst_time(time_url, key):
     url = time_url + "?key=" + key + "&city=上海"
     result = requests.get(url)
@@ -106,6 +124,30 @@ def get_cst_time(time_url, key):
         return True
     else:
         return False
+
+
+# 随机返回当前未值班人员id，若无未值班人员，则将所有已值班人员 on_duty=3 修改为 on_duty=0
+def get_person_id_on_duty_random(duty_csv):
+    data = pd.read_csv(duty_csv)
+    count = len(data)
+
+    # 查找当前未值班人员
+
+    person_not_on_duty = data.loc[data.on_duty == 0]
+
+    # 随机选择当前未值班人数的id
+    index_nextday = randint(0, len(person_not_on_duty) - 1)
+
+    person_on_duty = person_not_on_duty.iloc[index_nextday]
+
+    return (person_on_duty['id'])
+
+
+# 返回用户名，手机号
+def get_person_info_by_id(id):
+    data = pd.read_csv(duty_csv)
+    return data.loc[data.id == id]['name'].values[0], base64.b64decode(
+        data.loc[data.id == id]['mobile'].values[0]).decode()
 
 
 if __name__ == '__main__':
@@ -130,14 +172,10 @@ if __name__ == '__main__':
 
     if (is_trade_day(holiday_url, tianapi_key)):
         # 获取今日和次交易日值班人员信息
-        name_today, id_today, mobile_today = get_person_on_duty(duty_csv, 0)
-        name_tomorrow, id_tomorrow, mobile_tomorrow = get_person_on_duty(
-            duty_csv, 1)
-
-        # 解码手机号用于@指定人员
-
-        mobile_today = base64.b64decode(mobile_today).decode()
-        mobile_tomorrow = base64.b64decode(mobile_tomorrow).decode()
+        name_today, mobile_today = get_person_info_by_id(
+            get_person_id_on_duty(duty_csv, 0))
+        name_tomorrow, mobile_tomorrow = get_person_info_by_id(
+            get_person_id_on_duty(duty_csv, 1))
 
         # 钉钉提醒
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
@@ -146,6 +184,6 @@ if __name__ == '__main__':
         if (get_cst_time(time_url, tianapi_key)):
             # 更新值班人员csv
             print("rotate person on_duty")
-            rotate_person_on_duty(duty_csv)
+            rotate_person_on_duty_random(duty_csv)
     else:
         print("today is not a trade day")
