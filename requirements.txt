@@ -1,3 +1,2 @@
 requests==2.25.1
 pandas==1.2.0
-pyDes==2.0.1
