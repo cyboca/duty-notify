@@ -65,9 +65,11 @@ def is_trade_day(holiday_url, key):
 
     print(data)
 
-    if (data["newslist"][0]["isnotwork"] == 0
-            and data["newslist"][0]["weekday"] != 6
-            and data["newslist"][0]["weekday"] != 0):
+    if data["newslist"][0]["weekday"] == 5:
+        return 2
+    elif (data["newslist"][0]["isnotwork"] == 0
+          and data["newslist"][0]["weekday"] != 6
+          and data["newslist"][0]["weekday"] != 0):
         return 1
     else:
         return 0
@@ -149,6 +151,13 @@ def get_person_info_by_id(id):
         data.loc[data.id == id]['mobile'].values[0]).decode()
 
 
+# 将本周状态清空，on_duty字段非2的行全置0
+def init_csv(duty_csv):
+    data = pd.read_csv(duty_csv)
+    data.loc[data.on_duty != 2, "on_duty"] = 0
+    data.to_csv("duty.csv", index=False)
+
+
 if __name__ == '__main__':
 
     # 钉钉webhook地址
@@ -181,6 +190,9 @@ if __name__ == '__main__':
                    name_tomorrow, mobile_tomorrow)
 
         if (get_cst_time(time_url, tianapi_key)):
+            # 若本日为周五，则初始化csv文件
+            if is_trade_day(holiday_url, tianapi_key) == 2:
+                init_csv(duty_csv)
             # 更新值班人员csv
             print("rotate person on_duty")
             rotate_person_on_duty_random(duty_csv)
