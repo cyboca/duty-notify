@@ -70,9 +70,9 @@ def is_trade_day(holiday_url, key):
     elif (data["newslist"][0]["isnotwork"] == 0
           and data["newslist"][0]["weekday"] != 6
           and data["newslist"][0]["weekday"] != 0):
-        return 1
+        return True
     else:
-        return 0
+        return False
 
 
 # 轮转csv文件内容
@@ -101,6 +101,9 @@ def rotate_person_on_duty_random(duty_csv):
     data.loc[data.on_duty == 1, "on_duty"] = 4
     data.loc[data.on_duty == 2, "on_duty"] = 1
 
+    # 将周五状态为5的值重新置为1
+    data.loc[data.on_duty == 5, "on_duty"] = 1
+
     if len(data.loc[data.on_duty > 0]) == len(data):
         data.loc[data.on_duty == 3, "on_duty"] = 0
         data.to_csv("duty.csv", index=False)
@@ -112,7 +115,7 @@ def rotate_person_on_duty_random(duty_csv):
     data.to_csv("duty.csv", index=False)
 
 
-# 获取cst时区小时，用于轮转csv文件内容
+# 获取cst时区小时，用于轮转csv文件内容，大于14点返回true
 def get_cst_time(time_url, key):
     url = time_url + "?key=" + key + "&city=上海"
     result = requests.get(url)
@@ -151,11 +154,25 @@ def get_person_info_by_id(id):
         data.loc[data.id == id]['mobile'].values[0]).decode()
 
 
-# 将本周状态清空，on_duty字段非2的行全置0
+# 将on_duty非1全清零
 def init_csv(duty_csv):
     data = pd.read_csv(duty_csv)
-    data.loc[data.on_duty != 2, "on_duty"] = 0
+
+    # 周五清除状态前，先将当日值班==1，暂时修改为5，防止被rotate置为4
+    # 在rotate中重新修改为1，即值班池中去除周五当日值班人员
+    data.loc[data.on_duty == 1, "on_duty"] = 5
+
+    # 此处将非5的状态全清空，用于在rotate中提供值班池随机生成下周一值班
+    data.loc[data.on_duty != 5, "on_duty"] = 0
     data.to_csv("duty.csv", index=False)
+
+
+# 将on_duty非2的值清零
+def init_csv_2(duty_csv):
+    data = pd.read_csv(duty_csv)
+
+    data.loc[data.on_duty != 2, "on_duty"] = 0
+    data.to_csv(duty_csv, index=False)
 
 
 if __name__ == '__main__':
@@ -189,10 +206,18 @@ if __name__ == '__main__':
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
                    name_tomorrow, mobile_tomorrow)
 
+        # 周五早上，将当日值班修改为5，其余全清零，运行rotate，重新将5改为1，取得下日值班
+        if (is_trade_day(holiday_url, tianapi_key) == 2
+                and not get_cst_time(time_url, tianapi_key)):
+            init_csv(duty_csv)
+            rotate_person_on_duty_random(duty_csv)
+
         if (get_cst_time(time_url, tianapi_key)):
-            # 若本日为周五，则初始化csv文件
-            if is_trade_day(holiday_url, tianapi_key) == 2:
-                init_csv(duty_csv)
+
+            # 周五下午，将on_duty非2的值外清零
+            if (is_trade_day(holiday_url, tianapi_key) == 2):
+                init_csv_2(duty_csv)
+
             # 更新值班人员csv
             print("rotate person on_duty")
             rotate_person_on_duty_random(duty_csv)
