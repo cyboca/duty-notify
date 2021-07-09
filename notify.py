@@ -195,6 +195,12 @@ if __name__ == '__main__':
     # csv文件路径
     duty_csv = "duty.csv"
 
+    # 周五早上，将当日值班修改为5，其余全清零，运行rotate，重新将5改为1，取得下日值班
+    if (is_trade_day(holiday_url, tianapi_key) == 2
+            and not get_cst_time(time_url, tianapi_key)):
+        init_csv(duty_csv)
+        rotate_person_on_duty_random(duty_csv)
+        
     if (is_trade_day(holiday_url, tianapi_key)):
         # 获取今日和次交易日值班人员信息
         name_today, mobile_today = get_person_info_by_id(
@@ -205,12 +211,6 @@ if __name__ == '__main__':
         # 钉钉提醒
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
                    name_tomorrow, mobile_tomorrow)
-
-        # 周五早上，将当日值班修改为5，其余全清零，运行rotate，重新将5改为1，取得下日值班
-        if (is_trade_day(holiday_url, tianapi_key) == 2
-                and not get_cst_time(time_url, tianapi_key)):
-            init_csv(duty_csv)
-            rotate_person_on_duty_random(duty_csv)
 
         if (get_cst_time(time_url, tianapi_key)):
 
