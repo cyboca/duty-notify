@@ -230,7 +230,7 @@ if __name__ == '__main__':
 
     WEEKDAY = get_weekday(holiday_url, tianapi_key)
     OFFSET = get_offset(offset_file)
-    CSV_LEN=get_csv_len(duty_csv)
+    CSV_LEN = get_csv_len(duty_csv)
 
     # 周五早上，更新偏移值
     if (WEEKDAY == 5 and not get_cst_time(time_url, tianapi_key)):
@@ -244,7 +244,7 @@ if __name__ == '__main__':
         id_nextday = (WEEKDAY + 1 + OFFSET) % CSV_LEN
         if (WEEKDAY == 5):
             id_today = (WEEKDAY + OFFSET - 1) % CSV_LEN
-            id_nextday = (WEEKDAY + OFFSET + 1) % CSV_LEN
+            id_nextday = (1 + OFFSET) % CSV_LEN
 
         # 取余时处理余数可能为0，存在id越界的情况，此处对id加1获取真实id
         id_today = id_today + 1
