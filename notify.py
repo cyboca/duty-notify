@@ -55,6 +55,11 @@ def get_person_id_on_duty(duty_csv, day):
         return person_on_duty['id'].values[0]
 
 
+def get_csv_len(duty_csv):
+    data = pd.read_csv(duty_csv)
+    return len(data)
+
+
 # 判断是否为交易日
 def is_trade_day(holiday_url, key):
     today = datetime.date.today().strftime('%Y-%m-%d')
@@ -65,14 +70,24 @@ def is_trade_day(holiday_url, key):
 
     print(data)
 
-    if data["newslist"][0]["weekday"] == 5:
-        return 2
-    elif (data["newslist"][0]["isnotwork"] == 0
-          and data["newslist"][0]["weekday"] != 6
-          and data["newslist"][0]["weekday"] != 0):
+    if (data["newslist"][0]["isnotwork"] == 0
+            and data["newslist"][0]["weekday"] != 6
+            and data["newslist"][0]["weekday"] != 0):
         return True
     else:
         return False
+
+
+def get_weekday(holiday_url, key):
+    today = datetime.date.today().strftime('%Y-%m-%d')
+    url = holiday_url + "?key=" + key + "&date=" + today
+    result = requests.get(url)
+
+    data = json.loads(result.text)
+
+    print(data)
+
+    return data["newslist"][0]["weekday"]
 
 
 # 轮转csv文件内容
@@ -175,6 +190,23 @@ def init_csv_2(duty_csv):
     data.to_csv(duty_csv, index=False)
 
 
+# 获取偏移量
+def get_offset(offset):
+    with open(offset, 'r') as fp:
+        value = fp.read()
+        value_offset = int(value)
+        return value_offset
+
+
+def rotate_offset(offset):
+    with open(offset, "r+") as fp:
+        value = fp.read()
+        new_offset = int(value) + 1
+        fp.seek(0)
+        fp.truncate()
+        fp.write(str(new_offset))
+
+
 if __name__ == '__main__':
 
     # 钉钉webhook地址
@@ -194,32 +226,39 @@ if __name__ == '__main__':
 
     # csv文件路径
     duty_csv = "duty.csv"
+    offset = 'offset'
 
-    # 周五早上，将当日值班修改为5，其余全清零，运行rotate，重新将5改为1，取得下日值班
-    if (is_trade_day(holiday_url, tianapi_key) == 2
-            and not get_cst_time(time_url, tianapi_key)):
-        init_csv(duty_csv)
-        rotate_person_on_duty_random(duty_csv)
-        
+    WEEKDAY = get_weekday(holiday_url, tianapi_key)
+
+    # 周五早上，更新偏移值
+    if (WEEKDAY == 5 and not get_cst_time(time_url, tianapi_key)):
+        rotate_offset(offset)
+
+    # 若为周五，取今日值班时，因早上offset已更新，所以取今日值班人员id时需减1，即使用本周的offset获取
+    # 周五取下个值班人员id时需加1
     if (is_trade_day(holiday_url, tianapi_key)):
+
+        id_today = (WEEKDAY + get_offset('offset')) % get_csv_len(duty_csv)
+        id_nextday = (WEEKDAY + 1 +
+                      get_offset('offset')) % get_csv_len(duty_csv)
+        if (WEEKDAY == 5):
+            id_today = (WEEKDAY + get_offset('offset') -
+                        1) % get_csv_len(duty_csv)
+            id_nextday = (WEEKDAY + get_offset('offset') +
+                          1) % get_csv_len(duty_csv)
+
+        # 取余时处理余数可能为0，存在id越界的情况，此处对id加1获取真实id
+        id_today = id_today + 1
+        id_nextday = id_nextday + 1
+        print("id today: %d,id nextday: %d" % (id_today, id_nextday))
+
         # 获取今日和次交易日值班人员信息
-        name_today, mobile_today = get_person_info_by_id(
-            get_person_id_on_duty(duty_csv, 0))
-        name_tomorrow, mobile_tomorrow = get_person_info_by_id(
-            get_person_id_on_duty(duty_csv, 1))
+        name_today, mobile_today = get_person_info_by_id(id_today)
+        name_tomorrow, mobile_tomorrow = get_person_info_by_id(id_nextday)
 
         # 钉钉提醒
         getDingMes(dingtalk_url + dingtalk_key, name_today, mobile_today,
                    name_tomorrow, mobile_tomorrow)
 
-        if (get_cst_time(time_url, tianapi_key)):
-
-            # 周五下午，将on_duty非2的值外清零
-            if (is_trade_day(holiday_url, tianapi_key) == 2):
-                init_csv_2(duty_csv)
-
-            # 更新值班人员csv
-            print("rotate person on_duty")
-            rotate_person_on_duty_random(duty_csv)
     else:
         print("today is not a trade day")
