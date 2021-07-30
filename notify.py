@@ -226,26 +226,25 @@ if __name__ == '__main__':
 
     # csv文件路径
     duty_csv = "duty.csv"
-    offset = 'offset'
+    offset_file = 'offset'
 
     WEEKDAY = get_weekday(holiday_url, tianapi_key)
+    OFFSET = get_offset(offset_file)
+    CSV_LEN=get_csv_len(duty_csv)
 
     # 周五早上，更新偏移值
     if (WEEKDAY == 5 and not get_cst_time(time_url, tianapi_key)):
-        rotate_offset(offset)
+        rotate_offset(offset_file)
 
     # 若为周五，取今日值班时，因早上offset已更新，所以取今日值班人员id时需减1，即使用本周的offset获取
     # 周五取下个值班人员id时需加1
     if (is_trade_day(holiday_url, tianapi_key)):
 
-        id_today = (WEEKDAY + get_offset('offset')) % get_csv_len(duty_csv)
-        id_nextday = (WEEKDAY + 1 +
-                      get_offset('offset')) % get_csv_len(duty_csv)
+        id_today = (WEEKDAY + OFFSET) % CSV_LEN
+        id_nextday = (WEEKDAY + 1 + OFFSET) % CSV_LEN
         if (WEEKDAY == 5):
-            id_today = (WEEKDAY + get_offset('offset') -
-                        1) % get_csv_len(duty_csv)
-            id_nextday = (WEEKDAY + get_offset('offset') +
-                          1) % get_csv_len(duty_csv)
+            id_today = (WEEKDAY + OFFSET - 1) % CSV_LEN
+            id_nextday = (WEEKDAY + OFFSET + 1) % CSV_LEN
 
         # 取余时处理余数可能为0，存在id越界的情况，此处对id加1获取真实id
         id_today = id_today + 1
