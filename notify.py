@@ -249,6 +249,8 @@ if __name__ == '__main__':
         # 取余时处理余数可能为0，存在id越界的情况，此处对id加1获取真实id
         id_today = id_today + 1
         id_nextday = id_nextday + 1
+        print("weekday: %d, offset: %d, csv_len: %d" %
+              (WEEKDAY, OFFSET, CSV_LEN))
         print("id today: %d,id nextday: %d" % (id_today, id_nextday))
 
         # 获取今日和次交易日值班人员信息
