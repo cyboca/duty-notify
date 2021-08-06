@@ -243,6 +243,7 @@ if __name__ == '__main__':
         id_today = (WEEKDAY + OFFSET) % CSV_LEN
         id_nextday = (WEEKDAY + 1 + OFFSET) % CSV_LEN
         if (WEEKDAY == 5):
+            OFFSET = get_offset(offset_file)
             id_today = (WEEKDAY + OFFSET - 1) % CSV_LEN
             id_nextday = (1 + OFFSET) % CSV_LEN
 
