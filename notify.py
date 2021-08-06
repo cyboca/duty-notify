@@ -139,6 +139,8 @@ def get_cst_time(time_url, key):
 
     date_time = time.strptime(data["newslist"][0]["strtime"],
                               "%Y-%m-%d %H:%M:%S")
+
+    print("time hour is: %d" % (date_time.tm_hour))
     if date_time.tm_hour > 14:
         return True
     else:
@@ -234,6 +236,7 @@ if __name__ == '__main__':
 
     # 周五早上，更新偏移值
     if (WEEKDAY == 5 and not get_cst_time(time_url, tianapi_key)):
+        print("rotate offset file")
         rotate_offset(offset_file)
 
     # 若为周五，取今日值班时，因早上offset已更新，所以取今日值班人员id时需减1，即使用本周的offset获取
